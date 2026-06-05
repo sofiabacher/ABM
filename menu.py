@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from pantallas import (clientes, productos, proveedores)
+from pantallas import clientes, productos, proveedores
 
 def abrir_clientes():
     clientes.abrir_clientes()

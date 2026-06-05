@@ -1,1 +1,2 @@
 1|Sofia|Bacher|48522287|Los Incas|ACTIVO
+2|Nacho|Mendoza|444444|Galvan|BAJA

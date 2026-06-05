@@ -1,6 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from utilidades.archivos import (crear_archivo, leer_registros, guardar_registros)
+
+from utilidades.archivos import leer_registros, guardar_registros
+from utilidades.base_crud import BaseCRUD
+from utilidades.base_pantalla import BasePantalla
 
 ARCHIVO = "datos/proveedores.txt"
 
