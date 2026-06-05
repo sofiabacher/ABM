@@ -68,6 +68,30 @@ def abrir_clientes():
         direccion.set("")
         estado.set("ACTIVO")
 
+    def validar_campos():
+        if not crud.validar_requerido(identificador.get(), "Identificador"):
+            return False
+
+        if not crud.validar_numerico(identificador.get(), "Identificador"):
+            return False
+
+        if not crud.validar_requerido(nombre.get(), "Nombre"):
+            return False
+
+        if not crud.validar_requerido(apellido.get(), "Apellido"):
+            return False
+        
+        if not crud.validar_requerido(dni.get(), "DNI"):
+            return False
+        
+        if not crud.validar_numerico(dni.get(), "DNI"):
+            return False
+
+        if not crud.validar_requerido(direccion.get(), "Dirección"):
+            return False
+
+        return True
+
     def seleccionar(event):
         seleccion = tabla.focus()
         
@@ -91,6 +115,9 @@ def abrir_clientes():
     )
 
     def alta():
+        if not validar_campos():
+            return
+         
         nuevo = [
             identificador.get(),
             nombre.get().strip(),
@@ -102,14 +129,14 @@ def abrir_clientes():
 
         resultado = crud.alta(nuevo, identificador.get())
         
-        if resultado == "ERROR_DUPLICADO":
-            messagebox.showerror("Error", "El identificador ya existe")
-        else:
+        if resultado == "OK":
             messagebox.showinfo("OK", "Cliente agregado correctamente")
+            
+        elif resultado == "ERROR_DUPLICADO":
+            messagebox.showerror("Error", "El identificador ya existe")
 
     def baja():
-        if identificador.get() == "":
-            messagebox.showwarning("Atención", "Ingrese ID")
+        if not crud.validar_requerido(identificador.get(), "Identificador"):
             return
 
         ok = crud.baja(identificador.get())
@@ -120,6 +147,9 @@ def abrir_clientes():
             messagebox.showerror("Error", "No encontrado")
 
     def modificar():
+        if not validar_campos():
+            return
+         
         nuevo = [
             identificador.get(),
             nombre.get().strip(),

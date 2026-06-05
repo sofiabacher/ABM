@@ -1,9 +1,46 @@
+from tkinter import messagebox
+
 class BaseCRUD:
     def __init__(self, leer, guardar, insertar, limpiar):
         self.leer = leer
         self.guardar = guardar
         self.insertar = insertar
         self.limpiar = limpiar
+
+    # ------------ VALIDACIONES ----------------
+
+    def validar_id(self, id_value):
+        if id_value == "":
+            messagebox.showwarning("Atención", "Debe ingresar un identificador.")
+            return False
+
+        if not id_value.isdigit():
+            messagebox.showwarning("Atención", "El identificador debe ser numérico.")
+            return False
+
+        return True
+
+    def validar_requerido(self, valor, nombre_campo):
+        if valor.strip() == "":
+            messagebox.showwarning("Atención", f"Debe completar {nombre_campo}.")
+            return False
+
+        return True
+
+    def validar_numerico(self, valor, nombre_campo):
+        if valor == "":
+            messagebox.showwarning("Atención", f"Debe completar {nombre_campo}.")
+            return False
+
+        try:
+            float(valor)
+        except ValueError:
+            messagebox.showwarning( "Atención", f"{nombre_campo} debe ser numérico.")
+            return False
+
+        return True
+    
+    # ----------------- CRUD --------------------
 
     def alta(self, nuevo_registro, campo_id=None):
         datos = self.leer()
