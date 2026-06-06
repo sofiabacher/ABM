@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from pantallas import clientes, productos, proveedores
+from pantallas import clientes, productos, proveedores, facturacion
 
 def abrir_clientes():
     clientes.abrir_clientes()
@@ -11,7 +11,8 @@ def abrir_proveedores():
 def abrir_productos():
     productos.abrir_productos()
 
-#def abrir_facturacion():
+def abrir_facturacion():
+    facturacion.abrir_facturacion()
 
 
 def salir():
@@ -59,8 +60,8 @@ tk.Button(
 tk.Button(
     ventana_menu,
     text="Facturación",
-    width=25
-    #command=abrir_facturacion
+    width=25,
+    command=abrir_facturacion
 ).pack(pady=10)
 
 tk.Button(
