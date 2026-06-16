@@ -1,17 +1,8 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from utilidades.archivos import leer_registros, guardar_registros
-from utilidades.base_crud import BaseCRUD
+from services.proveedor_service import ProveedorService
 from utilidades.base_pantalla import BasePantalla
-
-ARCHIVO = "datos/proveedores.txt"
-
-def leer_proveedores():
-    return leer_registros(ARCHIVO)
-
-def guardar_proveedores(proveedores):
-    guardar_registros(ARCHIVO, proveedores)
 
 def abrir_proveedores():
     ventana = tk.Toplevel()
@@ -29,6 +20,8 @@ def abrir_proveedores():
     telefono = tk.StringVar()
     email = tk.StringVar()
     estado = tk.StringVar(value="ACTIVO")
+
+    service = ProveedorService()
 
     # ---------------- UI BASE ----------------
 
@@ -49,13 +42,12 @@ def abrir_proveedores():
 
     # -------------- FUNCIONES -------------
 
-    def cargar_tabla(datos=None):
+    def cargar_tabla():
         ui.limpiar_tabla()
-
-        if datos is None:
-            datos = leer_proveedores()
         
-        for proveedor in datos:
+        proveedores = service.obtener_todos()
+        
+        for proveedor in proveedores:
             tabla.insert("", "end", values=proveedor)
 
     def limpiar_campos():
@@ -66,33 +58,6 @@ def abrir_proveedores():
         telefono.set("")
         email.set("")
         estado.set("ACTIVO")
-
-    def validar_campos():
-        if not crud.validar_requerido(identificador.get(), "Identificador"):
-            return False
-
-        if not crud.validar_numerico(identificador.get(), "Identificador"):
-            return False
-
-        if not crud.validar_requerido(razon_social.get(), "Razón Social"):
-            return False
-
-        if not crud.validar_requerido(cuit.get(), "CUIT"):
-            return False
-
-        if not crud.validar_numerico(cuit.get(), "CUIT"):
-            return False
-
-        if not crud.validar_requerido(direccion.get(), "Dirección"):
-            return False
-
-        if not crud.validar_requerido(telefono.get(), "Telefono"):
-            return False
-
-        if not crud.validar_requerido(email.get(), "Email"):
-            return False
-
-        return True
 
     def seleccionar(event):
         seleccion = tabla.focus()
@@ -110,18 +75,21 @@ def abrir_proveedores():
     
     # ---------------- CRUD --------------
 
-    crud = BaseCRUD(
-        leer_proveedores,
-        guardar_proveedores,
-        cargar_tabla,
-        limpiar_campos
-    )
-
     def alta():
-        if not validar_campos():
-            return
+        valido, mensaje = service.validar_campos(
+            identificador.get(),
+            razon_social.get(),
+            cuit.get(),
+            direccion.get(),
+            telefono.get(),
+            email.get()
+        )
 
-        nuevo = [
+        if not valido:
+            messagebox.showerror("Error", mensaje)
+            return
+        
+        ok, mensaje = service.alta(
             identificador.get(),
             razon_social.get().strip(),
             cuit.get(),
@@ -129,32 +97,46 @@ def abrir_proveedores():
             telefono.get().strip(),
             email.get().strip(),
             estado.get()
-        ]
+        )
 
-        resultado = crud.alta(nuevo, identificador.get())
+        if ok:
+            messagebox.showinfo("OK", mensaje)
+            cargar_tabla()
+            limpiar_campos()
 
-        if resultado == "OK":
-            messagebox.showinfo("OK", "Cliente agregado correctamente")
-            
-        elif resultado == "ERROR_DUPLICADO":
-            messagebox.showerror("Error", "El identificador ya existe")
+        else:
+            messagebox.showerror("Error", mensaje)
 
     def baja():
-        if not crud.validar_requerido(identificador.get(), "Identificador"):
+        if identificador.get() == "":
+            messagebox.showerror("Error", "Debe seleccionar un proveedor")
             return
 
-        ok = crud.baja(identificador.get())
+        ok, mensaje = service.baja(identificador.get())
 
         if ok:
-            messagebox.showinfo("Baja", "Proveedor dado de baja correctamente.")
+            messagebox.showinfo("OK", mensaje)
+            cargar_tabla()
+            limpiar_campos()
+
         else:
-            messagebox.showerror("Error", "Proveedor no encontrado.")
-
+            messagebox.showerror("Error", mensaje)
+            
     def modificar():
-        if not validar_campos():
-            return
+        valido, mensaje = service.validar_campos(
+            identificador.get(),
+            razon_social.get(),
+            cuit.get(),
+            direccion.get(),
+            telefono.get(),
+            email.get()
+        )
 
-        nuevo = [
+        if not valido:
+            messagebox.showerror("Error", mensaje)
+            return
+        
+        ok, mensaje = service.alta(
             identificador.get(),
             razon_social.get().strip(),
             cuit.get(),
@@ -162,14 +144,15 @@ def abrir_proveedores():
             telefono.get().strip(),
             email.get().strip(),
             estado.get()
-        ]
-
-        ok = crud.modificar(identificador.get(), nuevo)
+        )
 
         if ok:
-            messagebox.showinfo("Modificación", "Proveedor modificado correctamente.")
+            messagebox.showinfo("OK", mensaje)
+            cargar_tabla()
+            limpiar_campos()
+
         else:
-            messagebox.showerror("Error", "Proveedor no encontrado.")
+            messagebox.showerror("Error", mensaje)
 
     # ----------- FORMULARIO ----------------------
 

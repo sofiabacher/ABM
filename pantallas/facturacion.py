@@ -1,21 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from datetime import datetime
-
-from utilidades.archivos import leer_registros
 from utilidades.base_pantalla import BasePantalla
-
-# ----------- ARCHIVOS -----------------------
-
-FACTURAS = "datos/facturas.txt"
-CLIENTES = "datos/clientes.txt"
-PRODUCTOS = "datos/productos.txt"
-
-def leer_clientes():
-    return leer_registros(CLIENTES)
-
-def leer_productos():
-    return leer_registros(PRODUCTOS)
+from services.factura_service import FacturaService
 
 def abrir_facturacion():
     ventana = tk.Toplevel()
@@ -34,6 +20,8 @@ def abrir_facturacion():
 
     items_factura = []
 
+    service = FacturaService()
+
     # --------- UI BASE ----------------
 
     ui = BasePantalla(
@@ -51,17 +39,8 @@ def abrir_facturacion():
 
     # --------- DATOS -----------------
 
-    clientes = [
-        f"{c[0]} - {c[1]} {c[2]}"
-        for c in leer_clientes()
-        if c[5] == "ACTIVO"
-    ]
-
-    productos = {
-        f"{p[0]} - {p[1]}": float(p[3])
-        for p in leer_productos()
-        if p[6] == "ACTIVO"
-    }
+    clientes = service.obtener_clientes_activos()
+    productos = service.obtener_productos_activos()
 
     # ---------------- FORM -------------
     
@@ -189,31 +168,19 @@ def abrir_facturacion():
             messagebox.showwarning("Atención", "Debe agregar productos")
             return
         
-        numero = datetime.now().strftime("%Y%m%d%H%M%S")
-        total = actualizar_total()
+        ok, mensaje = service.generar_factura(
+            cliente.get(),
+            tipo_factura.get(),
+            estado_pago.get(),
+            items_factura
+        )
 
-        with open("datos/facturas.txt", "a", encoding="utf-8") as archivo_facturas:
-            archivo_facturas.write(
-                f"{numero}|"
-                f"{tipo_factura.get()}|"
-                f"{datetime.now().strftime('%d/%m/%Y')}|"
-                f"{total}|"
-                f"{estado_pago.get()}|"
-                f"{cliente.get()}\n" 
-            )
-
-            with open("datos/detalle_factura.txt", "a", encoding="utf-8") as archivo_detalle:
-                for item in items_factura:
-                    archivo_detalle.write(
-                        f"{numero}|"
-                        f"{item['producto']}| "
-                        f"{item['cantidad']}|"
-                        f"{item['precio']}|"
-                        f"{item['subtotal']}\n"
-                    )
-
-            messagebox.showinfo("OK", "Factura generada correctamente")
+        if ok:
+            messagebox.showinfo("OK", mensaje)
             ventana.destroy()
+        
+        else:
+            messagebox.showerror("Error", mensaje)
 
 # --------- BOTONES -----------------
 

@@ -9,3 +9,5 @@ __pycache__/
 # Entornos virtuales
 venv/
 .env
+
+database.db

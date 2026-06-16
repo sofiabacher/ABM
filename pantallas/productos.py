@@ -1,17 +1,8 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from utilidades.archivos import leer_registros, guardar_registros
-from utilidades.base_crud import BaseCRUD
+from services.producto_service import ProductoService
 from utilidades.base_pantalla import BasePantalla
-
-ARCHIVO = "datos/productos.txt"
-
-def leer_productos():
-    return leer_registros(ARCHIVO)
-
-def guardar_productos(productos):
-    guardar_registros(ARCHIVO, productos)
 
 def abrir_productos():
     ventana = tk.Toplevel()
@@ -29,6 +20,8 @@ def abrir_productos():
     talle = tk.StringVar(value="M")
     color = tk.StringVar(value="NEGRO")
     estado = tk.StringVar(value="ACTIVO")
+
+    service = ProductoService()
 
     # ---------------- UI BASE ----------------
 
@@ -49,13 +42,12 @@ def abrir_productos():
 
     # -------------- FUNCIONES -------------
 
-    def cargar_tabla(datos=None):
+    def cargar_tabla():
         ui.limpiar_tabla()
 
-        if datos is None:
-            datos = leer_productos()
+        productos = service.obtener_todos()
 
-        for producto in datos:
+        for producto in productos:
             tabla.insert("", "end", values=producto)
 
     def limpiar_campos():
@@ -66,31 +58,6 @@ def abrir_productos():
         talle.set("M")
         color.set("NEGRO")
         estado.set("ACTIVO")
-
-    def validar_campos():
-        if not crud.validar_requerido(identificador.get(), "Identificador"):
-            return False
-
-        if not crud.validar_numerico(identificador.get(), "Identificador"):
-            return False
-
-        if not crud.validar_requerido(descripcion.get(), "Descripción"):
-            return False
-
-        if not crud.validar_requerido(categoria.get(), "Categoria"):
-            return False
-
-        if precio.get() == "":
-            messagebox.showwarning("Atención", "Debe completar el Precio.")
-            return False
-
-        if not crud.validar_requerido(precio.get(), "Precio"):
-            return False
-
-        if not crud.validar_numerico(precio.get(), "Precio"):
-            return False
-
-        return True
 
     def seleccionar(event):
         seleccionado = tabla.focus()
@@ -108,18 +75,19 @@ def abrir_productos():
 
     # -------------- CRUD ------------------
 
-    crud = BaseCRUD(
-        leer_productos,
-        guardar_productos,
-        cargar_tabla,
-        limpiar_campos
-    )
-
     def alta():
-        if not validar_campos():
+        valido, mensaje = service.validar_campos(
+            identificador.get(),
+            descripcion.get(),
+            categoria.get(),
+            precio.get()
+        )
+
+        if not valido:
+            messagebox.showerror("Error", mensaje)
             return
 
-        nuevo = [
+        ok, mensaje = service.alta(
             identificador.get(),
             descripcion.get().strip(),
             categoria.get().strip(),
@@ -127,33 +95,44 @@ def abrir_productos():
             talle.get(),
             color.get(),
             estado.get()
-        ]
+        )
 
-        resultado = crud.alta(nuevo, identificador.get())
+        if ok:
+            messagebox.showinfo("OK", mensaje)
+            cargar_tabla()
+            limpiar_campos()
 
-        if resultado == "OK":
-            messagebox.showinfo("OK", "Cliente agregado correctamente")
-            
-        elif resultado == "ERROR_DUPLICADO":
-            messagebox.showerror("Error", "El identificador ya existe")
+        else:
+            messagebox.showerror("Error", mensaje)
 
     def baja():
-        if not crud.validar_requerido(identificador.get(), "Identificador"):
+        if identificador.get() == "":
+            messagebox.showerror("Error", "Debe seleccionar un producto")
             return
 
-        ok = crud.baja(identificador.get())
+        ok, mensaje = service.baja(identificador.get())
 
         if ok:
-            messagebox.showinfo("Baja", "Producto dado de baja correctamente.")
-        else:
-            messagebox.showerror("Error", "Producto no encontrado.")
+            messagebox.showinfo("OK", mensaje)
+            cargar_tabla()
+            limpiar_campos()
 
+        else:
+            messagebox.showerror("Error", mensaje)
 
     def modificar():
-        if not validar_campos(True):
+        valido, mensaje = service.validar_campos(
+            identificador.get(),
+            descripcion.get(),
+            categoria.get(),
+            precio.get()
+        )
+
+        if not valido:
+            messagebox.showerror("Error", mensaje)
             return
 
-        nuevo = [
+        ok, mensaje = service.modificar(
             identificador.get(),
             descripcion.get().strip(),
             categoria.get().strip(),
@@ -161,14 +140,14 @@ def abrir_productos():
             talle.get(),
             color.get(),
             estado.get()
-        ]
-
-        ok = crud.modificar(identificador.get(), nuevo)
+        )
 
         if ok:
-            messagebox.showinfo("Modificación","Producto modificado correctamente.")
+            messagebox.showinfo("OK", mensaje)
+            cargar_tabla()
+
         else:
-            messagebox.showerror("Error", "Producto no encontrado.")
+            messagebox.showerror("Error", mensaje)
 
     # ------------- FORMULARIO -------------------
 
