@@ -60,3 +60,16 @@ class FacturaService:
         conn.commit()
         conn.close()
         return True, "Factura generada correctamente"
+    
+    def obtener_facturas(self):
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT * from facturas
+            ORDER BY fecha DESC
+        """)
+
+        facturas = cursor.fetchall()
+        conn.close()
+        return facturas

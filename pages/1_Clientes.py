@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 
+from io import BytesIO
+
 from services.cliente_service import ClienteService
 service = ClienteService()
 
@@ -86,6 +88,17 @@ with col1:
                 st.error(mensaje)
 
 with col2:
+    st.subheader("🔎 Buscar cliente")
+
+    texto_busqueda = st.text_input("Buscar por nombre, apellido o DNI")
+
+    if texto_busqueda:
+        texto = texto_busqueda.lower()
+        clientes = [
+            c for c in clientes
+            if (texto in str(c[1]).lower() or texto in str(c[2]).lower() or texto in str(c[3]).lower())
+        ]
+
     st.subheader("📋 Clientes registrados")
     
     if clientes:
@@ -93,6 +106,20 @@ with col2:
 
         df = pd.DataFrame(clientes, columns=columnas)
         st.dataframe(df, use_container_width=True)
+
+        excel = BytesIO()
+        with pd.ExcelWriter(excel, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Clientes")
+
+        st.download_button(
+            "📥 Descargar",
+            data=excel.getvalue(),
+            file_name="clientes.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
     
     else:
         st.info("No hay clientes registrados")
+    
+    
+    

@@ -1,8 +1,7 @@
-#fastapi
-#uvicorn
 streamlit
 mysql-connector-python
 python-dotenv
 python-multipart
 pandas
 plotly
+openpyxl
