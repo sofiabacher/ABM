@@ -8,7 +8,7 @@ class ProductoService(BaseService):
         if identificador.strip() == "":
             return False, "Debe ingresar un identificador"
     
-        if not identificador.isDigit():
+        if not identificador.isdigit():
             return False, "El identificador debe ser numérico"
 
         if descripcion.strip() == "":
@@ -31,6 +31,11 @@ class ProductoService(BaseService):
         if self.buscar_por_id(identificador):
             return False, "El identificador ya existe"
         
+        valido, mensaje = self.validar_campos(identificador, descripcion, categoria, precio)
+        
+        if not valido:
+            return False, mensaje
+        
         query = """
             INSERT INTO productos VALUES(%s,%s,%s,%s,%s,%s,%s)
         """
@@ -51,6 +56,11 @@ class ProductoService(BaseService):
     def modificar(self, identificador, descripcion, categoria, precio, talle, color, estado):
         if not self.buscar_por_id(identificador):
             return False, "Producto no encontrado"
+        
+        valido, mensaje = self.validar_campos(identificador, descripcion, categoria, precio)
+        
+        if not valido:
+            return False, mensaje
         
         query = """
             UPDATE productos 

@@ -54,7 +54,7 @@ class FacturaService:
             cursor.execute("""
                 INSERT INTO detalle_factura(numero_factura, producto, cantidad, precio, subtotal)
                 VALUES(%s,%s,%s,%s,%s)
-            """,(numero, item["poducto"], item["cantidad"], item["precio"], item["subtotal"])
+            """,(numero, item["producto"], item["cantidad"], item["precio"], item["subtotal"])
             )
         
         conn.commit()

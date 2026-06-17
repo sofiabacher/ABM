@@ -27,7 +27,7 @@ class BaseService:
         conn.close()
         return dato
     
-    def baja(self, identificador):
+    def baja_logica(self, identificador):
         conn = get_connection()
         cursor = conn.cursor()
 

@@ -8,7 +8,7 @@ class ProveedorService(BaseService):
         if identificador.strip() == "":
             return False, "Debe ingresar un identificador"
     
-        if not identificador.isDigit():
+        if not identificador.isdigit():
             return False, "El identificador debe ser numérico"
 
         if razon_social.strip() == "":
@@ -17,7 +17,7 @@ class ProveedorService(BaseService):
         if cuit.strip() == "":
             return False, "Debe ingresar un cuit"
     
-        if not cuit.isDigit():
+        if not cuit.isdigit():
             return False, "El cuit debe ser numérico"
         
         if direccion.strip() == "":
@@ -31,15 +31,20 @@ class ProveedorService(BaseService):
         
         return True, ""
 
-    def alta(self, identificador, razon_social, cuit, direccion, telefono, email):
+    def alta(self, identificador, razon_social, cuit, direccion, telefono, email, estado):
         if self.buscar_por_id(identificador):
             return False, "El identificador ya existe"
         
-        query = """
-            INSERT INTO proveedores VALUES(%s,%s,%s,%s,%s,%s, %s)
-        """
-        valores = (identificador, razon_social, cuit, direccion, telefono, email)
+        valido, mensaje = self.validar_campos(identificador, razon_social, cuit, direccion, telefono, email)
         
+        if not valido:
+            return False, mensaje
+        
+        query = """
+            INSERT INTO proveedores VALUES(%s,%s,%s,%s,%s,%s,%s)
+        """
+        valores = (identificador, razon_social, cuit, direccion, telefono, email, estado)
+
         self.insertar(query, valores)
 
         return True, "Proveedor agregado correctamente"
@@ -52,18 +57,24 @@ class ProveedorService(BaseService):
     
         return True, "Proveedor dado de baja"
         
-    def modificar(self, identificador, razon_social, cuit, direccion, telefono, email):
+    def modificar(self, identificador, razon_social, cuit, direccion, telefono, email, estado):
         if not self.buscar_por_id(identificador):
             return False, "Proveedor no encontrado"
         
+        valido, mensaje = self.validar_campos(identificador, razon_social, cuit, direccion, telefono, email)
+        
+        if not valido:
+            return False, mensaje
+        
         query = """
-            UPDATE productos 
+            UPDATE proveedores 
             SET        
                 razon_social=%s,
                 cuit=%s,
                 direccion=%s,
                 telefono=%s,
                 email=%s,
+                estado=%s
             WHERE id=%s
         """
         valores = (razon_social, cuit, direccion, telefono, email, identificador)

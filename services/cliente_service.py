@@ -8,7 +8,7 @@ class ClienteService(BaseService):
         if identificador.strip() == "":
             return False, "Debe ingresar un identificador"
     
-        if not identificador.isDigit():
+        if not identificador.isdigit():
             return False, "El identificador debe ser numérico"
 
         if nombre.strip() == "":
@@ -20,7 +20,7 @@ class ClienteService(BaseService):
         if dni.strip() == "":
             return False, "Debe completar el dni"
         
-        if not dni.isDigit():
+        if not dni.isdigit():
             return False, "El dni debe ser numérico"
         
         if direccion.strip() == "":
@@ -31,6 +31,11 @@ class ClienteService(BaseService):
     def alta(self, identificador, nombre, apellido, dni, direccion, estado):
         if self.buscar_por_id(identificador):
             return False, "El identificador ya existe"
+        
+        valido, mensaje = self.validar_campos(identificador, nombre, apellido, dni, direccion)
+        
+        if not valido:
+            return False, mensaje
 
         query = """
             INSERT INTO clientes VALUES(%s,%s,%s,%s,%s,%s)
@@ -52,6 +57,11 @@ class ClienteService(BaseService):
     def modificar(self, identificador, nombre, apellido, dni, direccion, estado):
         if not self.buscar_por_id(identificador):
             return False, "Cliente no encontrado"
+        
+        valido, mensaje = self.validar_campos(identificador, nombre, apellido, dni, direccion)
+        
+        if not valido:
+            return False, mensaje
         
         query = """
             UPDATE clientes 
