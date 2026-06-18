@@ -11,6 +11,7 @@ st.divider()
 
 clientes = service.obtener_clientes_activos()
 productos = service.obtener_productos_activos()
+facturas = service.obtener_facturas()
 
 if "items_factura" not in st.session_state:
     st.session_state.items_factura = []
@@ -68,3 +69,57 @@ with col2:
     
     else:
         st.info("No hay productos agregados")
+
+st.divider()
+st.subheader("📋 Historial de facturas")
+
+if facturas:
+    opciones = {
+        f[0]: f
+        for f in facturas
+    }
+
+    seleccionada = st.selectbox(
+        "Seleccionar factura",
+        options=opciones.keys()
+    )
+
+    factura = opciones[seleccionada]
+
+    st.write("Número:", factura[0])
+    st.write("Tipo:", factura[1])
+    st.write("Fecha:", factura[2])
+    st.write("Total:", factura[3])
+    st.write("Estado:", factura[4])
+    st.write("Cliente:", factura[5])
+
+    detalle = service.obtener_detalle(seleccionada)
+
+    if detalle:
+        columnas = ["Producto", "Cantidad", "Precio", "Subtotal"]
+        
+        df = pd.DataFrame(detalle, columns=columnas)
+        st.dataframe(df, use_container_width=True)
+
+        contenido = ""
+        contenido += f"Factura: {factura[0]}\n"
+        contenido += f"Fecha: {factura[2]}\n"
+        contenido += f"Cliente: {factura[5]}\n"
+        contenido += f"Estado: {factura[4]}\n"
+        contenido += "\nDETALLE\n"
+
+        for item in detalle:
+            contenido += (
+                f"{item[0]} |"
+                f"{item[1]} |"
+                f"${item[2]} |"
+                f"${item[3]} |"
+            )
+        
+        contenido += f"\nTOTAL: ${factura[3]}"
+
+        st.download_button(
+            "📄 Descargar factura",
+            data=contenido,
+            file_name=f"factura_{factura[0]}.txt"
+        )

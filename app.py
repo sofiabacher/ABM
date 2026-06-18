@@ -89,19 +89,6 @@ with col6:
 
 st.divider()
 
-st.subheader("🧾 Últimas facturas")
-
-if facturas:
-    columnas = ["Número", "Tipo", "Fecha", "Total", "Estado", "Cliente"]
-
-    df = pd.DataFrame(facturas, columns=columnas)
-    st.dataframe( df.tail(5), use_container_width=True)
-
-else:
-    st.info("Todavía no hay facturas generadas.")
-
-st.divider()
-
 st.subheader("🧭 Módulos disponibles")
 
 col7, col8, col9, col10 = st.columns(4)

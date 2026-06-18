@@ -38,8 +38,8 @@ class FacturaService:
         return productos
     
     def generar_factura(self, cliente, tipo_factura, estado_pago, items_factura):
-        numero = datetime.now().strftime("%Y%m%d%H%M%S")
-        fecha = datetime.now().strftime("%d/%m/%Y")
+        numero = f"FAC-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        fecha = datetime.now().strftime("%Y-/%m/%d")
         total = sum(item["subtotal"] for item in items_factura)
 
         conn = get_connection()
@@ -73,3 +73,17 @@ class FacturaService:
         facturas = cursor.fetchall()
         conn.close()
         return facturas
+
+    def obtener_detalle(self, numero_factura):
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT producto, cantidad, precio, subtotal
+            FROM detalle_factura WHERE numero_factura=%s
+        """, (numero_factura,))
+
+        detalle = cursor.fetchall()
+
+        conn.close()
+        return detalle
