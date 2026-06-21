@@ -21,7 +21,7 @@ create table usuarios(
     apellido varchar(100) not null,
     email varchar(150) not null unique,
     password varchar(255) not null,
-    rol enum('ADMIN', 'EMPLEADO') not null,
+    rol enum('ADMIN', 'VENTAS', 'COMPRAS', 'CONSULTA') not null,
     estado boolean default true,
     
     id_sucursal int not null,
@@ -34,6 +34,7 @@ create table clientes(
     apellido varchar(100) not null,
     dni varchar(20) not null unique,
     telefono varchar(30) not null,
+    email varchar(150) not null unique,
     direccion varchar(200) not null,
     fecha_alta datetime default current_timestamp,
     estado boolean default true
@@ -102,7 +103,7 @@ create table detalle_compra(
 	id_detalle_compra int auto_increment primary key, 
     cantidad int not null,
     precio_unitario decimal(10, 2) not null,
-    subtotoal decimal(10, 2) not null,
+    subtotal decimal(10, 2) not null,
     
     id_compra int not null,
     id_producto int not null,
@@ -115,7 +116,7 @@ create table detalle_venta(
 	id_detalle_venta int auto_increment primary key, 
     cantidad int not null,
     precio_unitario decimal(10, 2) not null,
-    subtotoal decimal(10, 2) not null,
+    subtotal decimal(10, 2) not null,
     
     id_venta int not null,
     id_producto int not null,
