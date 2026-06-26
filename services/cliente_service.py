@@ -1,16 +1,11 @@
-from services.base_service import BaseService
+from services.base_service import BaseService, RegistroDuplicadoError
+from models.cliente import Cliente
 
 class ClienteService(BaseService):
     def __init__(self):
-        super().__init__("clientes")
-
-    def validar_campos(self, identificador, nombre, apellido, dni, direccion):
-        if identificador.strip() == "":
-            return False, "Debe ingresar un identificador"
+        super().__init__("clientes", "id_cliente", Cliente)
     
-        if not identificador.isdigit():
-            return False, "El identificador debe ser numérico"
-
+    def validar_campos(self, nombre, apellido, dni, telefono, direccion, email=None):
         if nombre.strip() == "":
             return False, "Debe completar el nombre"
         
@@ -23,58 +18,61 @@ class ClienteService(BaseService):
         if not dni.isdigit():
             return False, "El dni debe ser numérico"
         
+        if telefono.strip() == "":
+            return False, "Debe completar el telefono"
+        
         if direccion.strip() == "":
             return False, "Debe completar el direccion"
-        
+
+        if email and "@" not in email:
+            return False, "El email no tiene un formato válido"
+
         return True, ""
+    
+    def alta(self, nombre, apellido, dni, telefono, direccion, email=None, estado=True):
+        valido, mensaje = self.validar_campos(nombre, apellido, dni, telefono, direccion, email)
 
-    def alta(self, identificador, nombre, apellido, dni, direccion, estado):
-        if self.buscar_por_id(identificador):
-            return False, "El identificador ya existe"
-        
-        valido, mensaje = self.validar_campos(identificador, nombre, apellido, dni, direccion)
-        
         if not valido:
             return False, mensaje
-
-        query = """
-            INSERT INTO clientes VALUES(%s,%s,%s,%s,%s,%s)
-        """
-        valores = (identificador, nombre, apellido, dni, direccion, estado)
         
-        self.insertar(query, valores)
+        query = """
+            INSERT INTO clientes (nombre, apellido, dni, telefono, direccion, email, estado)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        
+        valores = (nombre, apellido, dni, telefono, direccion, email, estado)
 
-        return True, "Cliente agregado correctamente"
-    
-    def baja(self, identificador):
-        if not self.buscar_por_id(identificador):
+        try:
+            nuevo_id = self.insertar(query, valores)
+
+        except RegistroDuplicadoError as error:
+            return False, str(error)
+
+        return True, f"Cliente agregado correctamente (id={nuevo_id})"
+
+    def baja(self, id_cliente):
+        if not self.buscar_por_id(id_cliente):
             return False, "Cliente no encontrado"
         
-        self.baja_logica(identificador)
-    
+        self.baja_logica(id_cliente)
+
         return True, "Cliente dado de baja"
-        
-    def modificar(self, identificador, nombre, apellido, dni, direccion, estado):
-        if not self.buscar_por_id(identificador):
+    
+    def modificar(self, id_cliente, nombre, apellido, dni, telefono, direccion, email=None, estado=True):
+        if not self.buscar_por_id(id_cliente):
             return False, "Cliente no encontrado"
         
-        valido, mensaje = self.validar_campos(identificador, nombre, apellido, dni, direccion)
-        
+        valido, mensaje = self.validar_campos(nombre, apellido, dni, telefono, direccion, email)
+
         if not valido:
             return False, mensaje
-        
-        query = """
-            UPDATE clientes 
-            SET        
-                nombre=%s,
-                apellido=%s,
-                dni=%s,
-                direccion=%s,
-                estado=%s
-            WHERE id=%s
-        """
-        valores = (nombre,  apellido, dni, direccion, estado, identificador)
 
+        query = """
+            UPDATE clientes
+            SET nombre=%s, apellido=%s, dni=%s, telefono=%s, direccion=%s, email=%s, estado=%s
+            WHERE id_cliente=%s
+        """
+        valores = (nombre, apellido, dni, telefono, direccion, email, estado, id_cliente)
         super().modificar(query, valores)
-    
+
         return True, "Cliente modificado"

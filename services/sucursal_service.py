@@ -1,7 +1,6 @@
 from services.base_service import BaseService, RegistroDuplicadoError
 from models.proveedor import Proveedor
 
-
 class ProveedorService(BaseService):
     def __init__(self):
         super().__init__("proveedores", "id_proveedor", Proveedor)
@@ -72,7 +71,6 @@ class ProveedorService(BaseService):
             SET razon_social=%s, cuit=%s, email=%s, telefono=%s, provincia=%s, direccion=%s, estado=%s
             WHERE id_proveedor=%s
         """
-
         valores = (razon_social, cuit, email, telefono, provincia, direccion, estado, id_proveedor)
         
         super().modificar(query, valores)
