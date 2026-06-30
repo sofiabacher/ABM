@@ -2,11 +2,11 @@ import streamlit as st
 import pandas as pd
 
 from io import BytesIO
-
 from services.cliente_service import ClienteService
+
 service = ClienteService()
 
-# -----------------------------------------------
+# ------------------- DATOS -----------------
 
 st.title("👥 Gestión de Clientes")
 st.divider()
@@ -16,7 +16,7 @@ opciones = {}
 
 if clientes:
     opciones = {
-        f"{c[0]} - {c[1]} {c[2]}": c
+        f"{c.id_cliente} - {c.nombre} - {c.apellido}": c
         for c in clientes
     }
 
@@ -27,99 +27,112 @@ seleccionado = st.selectbox(
 
 if seleccionado != "Nuevo cliente":
     cliente = opciones[seleccionado]
-
-    id_default = cliente[0]
-    nombre_default = cliente[1]
-    apellido_default = cliente[2]
-    dni_default = cliente[3]
-    direccion_default = cliente[4]
-    estado_default = cliente[5]
+    nombre_def = cliente.nombre
+    apellido_def = cliente.apellido
+    dni_def = cliente.dni
+    telefono_def = cliente.telefono
+    direccion_def = cliente.direccion
+    email_def = cliente.email or ""
+    estado_def = cliente.estado
 
 else:
-    id_default = ""
-    nombre_default = ""
-    apellido_default = ""
-    dni_default = ""
-    direccion_default = ""
-    estado_default = "ACTIVO"
+    cliente = None
+    nombre_def = ""
+    apellido_def = ""
+    dni_def = ""
+    telefono_def = ""
+    direccion_def = ""
+    email_def = ""
+    estado_def = True
 
-col1, col2 = st.columns([1, 2])    # FORMULARIO
+# ---------------- FORMULARIO -----------------
+
+col1, col2 = st.columns([1, 2])
 
 with col1:
     st.subheader("Formulario")
 
-    identificador = st.text_input("ID", value=id_default)
-    nombre = st.text_input("Nombre", value=nombre_default)
-    apellido = st.text_input("Apellido", value=apellido_default)
-    dni = st.text_input("DNI", value=dni_default)
-    direccion = st.text_input("Dirección", value=direccion_default)
-    estado = st.selectbox("Estado", ["ACTIVO", "BAJA"], index=0 if estado_default == "ACTIVO" else 1)
+    nombre = st.text_input("Nombre", value=nombre_def)
+    apellido = st.text_input("Apellido", value=apellido_def)
+    dni = st.text_input("DNI", value=dni_def)
+    telefono = st.text_input("Teléfono", value=telefono_def)
+    direccion = st.text_input("Dirección", value=direccion_def)
+    email = st.text_input("Email", value=email_def)
+    estado = st.selectbox("Estado", ["ACTIVO", "BAJA"], index=0 if estado_def else 1)
 
-    col_btn1, col_btn2, col_btn3 = st.columns(3)
+    estado_bool = estado == "ACTIVO"
 
-    with col_btn1:
-        if st.button("➕"):
-            ok, mensaje = service.alta(identificador, nombre, apellido, dni, direccion, estado)
-            
+    col1_btn1, col_btn2, col_btn3 = st.column(3)
+
+    with col1_btn1:
+        if st.button("➕ Alta"):
+            ok, mensaje = service.alta(nombre, apellido, dni, telefono, direccion, email or None, estado_bool)
+            st.success(mensaje) if ok else st.error(mensaje)
             if ok:
-                st.success(mensaje)
                 st.rerun()
-            else:
-                st.error(mensaje)
-
+    
     with col_btn2:
-        if st.button("✏️"):
-            ok, mensaje = service.modificar(identificador, nombre, apellido, dni, direccion, estado)
-            
-            if ok:
-                st.success(mensaje)
-                st.rerun()
+        if st.button("✏️ Modificar"):
+            if cliente is None:
+                st.error("Seleccione un cliente para modificar")
             else:
-                st.error(mensaje)
+                ok, mensaje = service.modificar(cliente.id_cliente, nombre, apellido, dni, telefono, direccion, email or None, estado_bool)
+                st.success(mensaje) if ok else st.error(mensaje)
+                if ok:
+                    st.rerun()
 
     with col_btn3:
-        if st.button("🗑️"):
-            ok, mensaje = service.baja(identificador)
-            
-            if ok:
-                st.warning(mensaje)
-                st.rerun()
+        if st.button("🗑️ Baja"):
+            if cliente is None:
+                st.error("Seleccione un cliente para dar de baja")
             else:
-                st.error(mensaje)
+                ok, mensjae = service.baja(cliente.id_cliente)
+                st.warning(mensaje) if ok else st.error(mensaje)
+                if ok:
+                    st.rerun()
+
+# ------------- TABLA + BUSCAR CLIENTES -----------------
 
 with col2:
     st.subheader("🔎 Buscar cliente")
-
     texto_busqueda = st.text_input("Buscar por nombre, apellido o DNI")
-
+    
+    lista = clientes
     if texto_busqueda:
         texto = texto_busqueda.lower()
-        clientes = [
+        lista = [
             c for c in clientes
-            if (texto in str(c[1]).lower() or texto in str(c[2]).lower() or texto in str(c[3]).lower())
+            if texto in c.nombre.lower()
+            or texto in c.apellido.lower()
+            or texto in c.dni.lower()
         ]
 
     st.subheader("📋 Clientes registrados")
-    
-    if clientes:
-        columnas = ["ID", "Nombre", "Apellido", "DNI", "Dirección", "Estado"]
 
-        df = pd.DataFrame(clientes, columns=columnas)
+    if lista:
+        df = pd.DataFrame([{
+            "ID": c.id_cliente,
+            "Nombre": c.nombre,
+            "Apellido": c.apellido,
+            "DNI": c.dni,
+            "Teléfono": c.telefono,
+            "Dirección": c.direccion,
+            "Email": c.email,
+            "Estado": "ACTIVO" if c.estado else "BAJA"
+        } for c in lista])
+
         st.dataframe(df, use_container_width=True)
 
         excel = BytesIO()
         with pd.ExcelWriter(excel, engine="openpyxl") as writer:
             df.to_excel(writer, index=False, sheet_name="Clientes")
-
+        
         st.download_button(
             "📥 Descargar",
             data=excel.getvalue(),
             file_name="clientes.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-    
+
     else:
         st.info("No hay clientes registrados")
-    
-    
-    
