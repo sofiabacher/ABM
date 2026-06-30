@@ -25,21 +25,25 @@ productos = producto_service.obtener_todos()
 proveedores = proveedor_service.obtener_todos()
 facturas = factura_service.obtener_facturas()
 
+# ---------------- METRICAS -------------------------------
+
 cant_clientes = len(clientes)
 cant_productos = len(productos)
 cant_proveedores = len(proveedores)
 cant_facturas = len(facturas)
 
-facturas_pagadas = sum(1 for f in facturas if f[4] == "PAGADO")
-facturas_pendientes = sum(1 for f in facturas if f[4] == "PENDIENTE")
-clientes_activos = sum(1 for c in clientes if c[5] == "ACTIVO")
-clientes_baja = sum(1 for c in clientes if c[5] == "BAJA")
-productos_activos = sum(1 for p in productos if p[6] == "ACTIVO")
-productos_baja = sum(1 for p in productos if p[6] == "BAJA")
-proveedores_activos = sum(1 for p in proveedores if p[6] == "ACTIVO")
-proveedores_baja = sum(1 for p in proveedores if p[6] == "BAJA")
+clientes_activos = sum(1 for c in clientes if c.estado)
+clientes_baja = sum(1 for c in clientes if not c.estado)
+productos_activos = sum(1 for p in productos if p.estado)
+productos_baja = sum(1 for p in productos if not p.estado)
+proveedores_activos = sum(1 for p in proveedores if p.estado)
+proveedores_baja = sum(1 for p in proveedores if not p.estado)
 
-# --------------------------------------------
+# facturas devuelven tuplas crudas del JOIN (no pasan por from_row de Factura)
+facturas_emitidas = sum(1 for f in facturas if f[7] == "EMITIDA")
+facturas_anuladas = sum(1 for f in facturas if f[7] == "ANULADA")
+
+# ---------------- UI -------------------------------
 
 st.title("👕 Sistema de Gestión de Indumentaria")
 st.write("Bienvenido al sistema de gestión empresarial.")
@@ -50,42 +54,20 @@ st.subheader("📊 Resumen general")
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    st.metric(
-        label="👥 Clientes",
-        value=cant_clientes
-    )
-
+    st.metric("👥 Clientes",    cant_clientes)
 with col2:
-    st.metric(
-        label="📦 Productos",
-        value=cant_productos
-    )
-
+    st.metric("📦 Productos",   cant_productos)
 with col3:
-    st.metric(
-        label="🏢 Proveedores",
-        value=cant_proveedores
-    )
-
+    st.metric("🏢 Proveedores", cant_proveedores)
 with col4:
-    st.metric(
-        "🧾 Facturas",
-        cant_facturas
-    )
+    st.metric("🧾 Facturas",    cant_facturas)
 
 col5, col6 = st.columns(2)
 
 with col5:
-    st.metric(
-        "✅ Facturas pagadas",
-        facturas_pagadas
-    )
-
+    st.metric("✅ Facturas emitidas",  facturas_emitidas)
 with col6:
-    st.metric(
-        "⏳ Facturas pendientes",
-        facturas_pendientes
-    )
+    st.metric("🚫 Facturas anuladas", facturas_anuladas)
 
 st.divider()
 
@@ -95,13 +77,10 @@ col7, col8, col9, col10 = st.columns(4)
 
 with col7:
     st.info("👥 Clientes")
-
 with col8:
     st.info("📦 Productos")
-
 with col9:
     st.info("🏢 Proveedores")
-
 with col10:
     st.info("🧾 Facturación")
 
@@ -113,8 +92,8 @@ col11, col12, col13 = st.columns(3)
 
 with col11:
     datos = pd.DataFrame({
-        "Estado": ["ACTIVO", "BAJA"],
-        "Cantidad": [clientes_activos, clientes_baja]
+        "Estado":   ["ACTIVO", "BAJA"],
+        "Cantidad": [clientes_activos, clientes_baja],
     })
 
     fig = px.pie(datos, names="Estado", values="Cantidad", title="Clientes")
@@ -122,8 +101,8 @@ with col11:
 
 with col12:
     datos = pd.DataFrame({
-        "Estado": ["ACTIVO", "BAJA"],
-        "Cantidad": [productos_activos, productos_baja]
+        "Estado":   ["ACTIVO", "BAJA"],
+        "Cantidad": [productos_activos, productos_baja],
     })
 
     fig = px.pie(datos, names="Estado", values="Cantidad", title="Productos")
@@ -131,9 +110,27 @@ with col12:
 
 with col13:
     datos = pd.DataFrame({
-        "Estado": ["ACTIVO", "BAJA"],
-        "Cantidad": [proveedores_activos, proveedores_baja]
+        "Estado":   ["ACTIVO", "BAJA"],
+        "Cantidad": [proveedores_activos, proveedores_baja],
     })
 
     fig = px.pie(datos, names="Estado", values="Cantidad", title="Proveedores")
     st.plotly_chart(fig, use_container_width=True)
+
+# ---------------- ALERTAS DE STOCK CRÍTICO -------------------------------
+
+criticos = [p for p in productos if p.necesita_reposicion and p.estado]
+
+if criticos:
+    st.divider()
+    st.subheader("⚠️ Stock crítico")
+    st.warning(f"{len(criticos)} producto(s) con stock igual o por debajo del mínimo.")
+
+    df_criticos = pd.DataFrame([{
+        "Código": p.codigo,
+        "Producto": p.nombre,
+        "Stock actual": p.stock_actual,
+        "Stock mínimo": p.stock_minimo,
+    } for p in criticos])
+
+    st.dataframe(df_criticos, use_container_width=True)
