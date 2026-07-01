@@ -27,7 +27,7 @@ class BaseService:
         datos = cursor.fetchall()
 
         conn.close()
-        return [self._mapear(fila) for fila in datos]
+        return [self.mapear(fila) for fila in datos]
     
     def buscar_por_id(self, identificador):
         conn = get_connection()
@@ -41,7 +41,7 @@ class BaseService:
         dato = cursor.fetchone()
 
         conn.close()
-        return self._mapear(dato)
+        return self.mapear(dato)
     
     def baja_logica(self, identificador):
         conn = get_connection()

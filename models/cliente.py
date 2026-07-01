@@ -24,6 +24,7 @@ class Cliente:
             apellido=apellido,
             dni=dni,
             telefono=telefono,
+            direccion=direccion,
             email=email,
             fecha_alta=fecha_alta,
             estado=bool(estado),

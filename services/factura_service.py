@@ -5,7 +5,7 @@ from database.connection import get_connection
 from models.bitacora import Bitacora
 
 class FacturaService():
-    IVA = Decimal("0,21")
+    IVA = Decimal("0.21")
 
     def obtener_clientes_activos(self):
         conn = get_connection()

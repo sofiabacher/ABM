@@ -62,12 +62,13 @@ with col1:
 
     estado_bool = estado == "ACTIVO"
 
-    col1_btn1, col_btn2, col_btn3 = st.column(3)
+    col1_btn1, col_btn2, col_btn3 = st.columns(3)
 
     with col1_btn1:
         if st.button("➕ Alta"):
             ok, mensaje = service.alta(nombre, apellido, dni, telefono, direccion, email or None, estado_bool)
             st.success(mensaje) if ok else st.error(mensaje)
+            
             if ok:
                 st.rerun()
     
@@ -75,9 +76,11 @@ with col1:
         if st.button("✏️ Modificar"):
             if cliente is None:
                 st.error("Seleccione un cliente para modificar")
+            
             else:
                 ok, mensaje = service.modificar(cliente.id_cliente, nombre, apellido, dni, telefono, direccion, email or None, estado_bool)
                 st.success(mensaje) if ok else st.error(mensaje)
+                
                 if ok:
                     st.rerun()
 
@@ -86,8 +89,9 @@ with col1:
             if cliente is None:
                 st.error("Seleccione un cliente para dar de baja")
             else:
-                ok, mensjae = service.baja(cliente.id_cliente)
+                ok, mensaje = service.baja(cliente.id_cliente)
                 st.warning(mensaje) if ok else st.error(mensaje)
+                
                 if ok:
                     st.rerun()
 

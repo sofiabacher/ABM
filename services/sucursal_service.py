@@ -1,78 +1,73 @@
 from services.base_service import BaseService, RegistroDuplicadoError
-from models.proveedor import Proveedor
+from models.sucursal import Sucursal
 
-class ProveedorService(BaseService):
+class SucursalService(BaseService):
     def __init__(self):
-        super().__init__("proveedores", "id_proveedor", Proveedor)
+        super().__init__("sucursales", "id_sucursal", Sucursal)
 
-    def validar_campos(self, razon_social, cuit, email, telefono, provincia, direccion):
-        if razon_social.strip() == "":
-            return False, "Debe completar la razón social"
-
-        if cuit.strip() == "":
-            return False, "Debe ingresar un cuit"
-
-        if not cuit.isdigit():
-            return False, "El cuit debe ser numérico"
-
-        if email.strip() == "" or "@" not in email:
-            return False, "Debe ingresar un email válido"
-
-        if telefono.strip() == "":
-            return False, "Debe completar el teléfono"
-
-        if provincia.strip() == "":
-            return False, "Debe completar la provincia"
+    def validar_campos(self, nombre, direccion, ciudad, provincia, telefono, email):
+        if nombre.strip() == "":
+            return False, "Debe completar el nombre"
 
         if direccion.strip() == "":
             return False, "Debe completar la dirección"
 
+        if ciudad.strip() == "":
+            return False, "Debe completar la ciudad"
+
+        if provincia.strip() == "":
+            return False, "Debe completar la provincia"
+
+        if telefono.strip() == "":
+            return False, "Debe completar el teléfono"
+
+        if email.strip() == "" or "@" not in email:
+            return False, "Debe ingresar un email válido"
+
         return True, ""
 
-    def alta(self, razon_social, cuit, email, telefono, provincia, direccion, estado=True):
-        valido, mensaje = self.validar_campos(razon_social, cuit, email, telefono, provincia, direccion)
+    def alta(self, nombre, direccion, ciudad, provincia, telefono, email, estado=True):
+        valido, mensaje = self.validar_campos(nombre, direccion, ciudad, provincia, telefono, email)
 
         if not valido:
             return False, mensaje
 
         query = """
-            INSERT INTO proveedores (razon_social, cuit, email, telefono, provincia, direccion, estado)
+            INSERT INTO sucursales (nombre, direccion, ciudad, provincia, telefono, email, estado)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        valores = (razon_social, cuit, email, telefono, provincia, direccion, estado)
+        valores = (nombre, direccion, ciudad, provincia, telefono, email, estado)
 
         try:
             nuevo_id = self.insertar(query, valores)
-
         except RegistroDuplicadoError as error:
             return False, str(error)
 
-        return True, f"Proveedor agregado correctamente (id={nuevo_id})"
+        return True, f"Sucursal agregada correctamente (id={nuevo_id})"
 
-    def baja(self, id_proveedor):
-        if not self.buscar_por_id(id_proveedor):
-            return False, "Proveedor no encontrado"
+    def baja(self, id_sucursal):
+        if not self.buscar_por_id(id_sucursal):
+            return False, "Sucursal no encontrada"
 
-        self.baja_logica(id_proveedor)
+        self.baja_logica(id_sucursal)
 
-        return True, "Proveedor dado de baja"
+        return True, "Sucursal dada de baja"
 
-    def modificar(self, id_proveedor, razon_social, cuit, email, telefono, provincia, direccion, estado=True):
-        if not self.buscar_por_id(id_proveedor):
-            return False, "Proveedor no encontrado"
+    def modificar(self, id_sucursal, nombre, direccion, ciudad, provincia, telefono, email, estado=True):
+        if not self.buscar_por_id(id_sucursal):
+            return False, "Sucursal no encontrada"
 
-        valido, mensaje = self.validar_campos(razon_social, cuit, email, telefono, provincia, direccion)
+        valido, mensaje = self.validar_campos(nombre, direccion, ciudad, provincia, telefono, email)
 
         if not valido:
             return False, mensaje
 
         query = """
-            UPDATE proveedores
-            SET razon_social=%s, cuit=%s, email=%s, telefono=%s, provincia=%s, direccion=%s, estado=%s
-            WHERE id_proveedor=%s
+            UPDATE sucursales
+            SET nombre=%s, direccion=%s, ciudad=%s, provincia=%s, telefono=%s, email=%s, estado=%s
+            WHERE id_sucursal=%s
         """
-        valores = (razon_social, cuit, email, telefono, provincia, direccion, estado, id_proveedor)
-        
+        valores = (nombre, direccion, ciudad, provincia, telefono, email, estado, id_sucursal)
         super().modificar(query, valores)
-        
-        return True, "Proveedor modificado"
+
+        return True, "Sucursal modificada"

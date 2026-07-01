@@ -4,7 +4,7 @@ from services.base_service import BaseService, RegistroDuplicadoError
 from models.usuario import Usuario
 from models.enums import RolUsuario
 
-class UsarioService(BaseService):
+class UsuarioService(BaseService):
     def __init__(self):
         super().__init__("usuarios", "id_usuario", Usuario)
 

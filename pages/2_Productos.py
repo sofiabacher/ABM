@@ -14,7 +14,7 @@ st.title("📦 Gestión de Productos")
 st.divider()
 
 productos = service.obtener_todos()
-categorias = categoria_service.obtener_todos
+categorias = categoria_service.obtener_todos()
 
 # Mapa id -> nombre para el selectbox
 cat_opciones = {c.id_categoria: c.nombre for c in categorias}
